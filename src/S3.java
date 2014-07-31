@@ -12,9 +12,10 @@ import java.util.UUID;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -29,9 +30,10 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class S3 {
 	private static AmazonS3 s3 = null;
-	private static String bucketName = "my-first-s3-bucket-" + UUID.randomUUID();
+	private static String bucketName = "s3-bucket-" + UUID.randomUUID();
 	private static String key = "MyObjectKey";
 
 	@BeforeClass
@@ -42,16 +44,7 @@ public class S3 {
 		
 		System.setProperty("com.amazonaws.sdk.disableCertChecking", "true");
 
-		AWSCredentials credentials = null;
-        try {
-            credentials = new ProfileCredentialsProvider().getCredentials();
-        } catch (Exception e) {
-            throw new AmazonClientException(
-                    "Cannot load the credentials from the credential profiles file. " +
-                    "Please make sure that your credentials file is at the correct " +
-                    "location (~/.aws/credentials), and is in valid format.",
-                    e);
-        }
+		AWSCredentials credentials = new ProfileCredentialsProvider().getCredentials();
 
         s3 = new AmazonS3Client(credentials);
         s3.setRegion(Region.getRegion(Regions.US_WEST_2));
@@ -65,23 +58,12 @@ public class S3 {
 			}
 			s3.deleteBucket(bucketName);
 		} catch (Exception e) {
-			
+			System.out.printf("Warning: bucket %s unavailable when destroy class\n", bucketName);
 		}
 	}
 
 	@Test
-	public void AllTest() {
-		CreateBucket();
-		ListBucket();
-		UploadFile();
-		ListFile();
-		DownloadFile();
-		DeleteFile();
-		DeleteBucket();
-	}
-
-	@Test
-	public void CreateBucket() {
+	public void t010CreateBucket() {
         /*
          * Create a new S3 bucket - Amazon S3 bucket names are globally unique,
          * so once a bucket name has been taken by any user, you can't create
@@ -96,7 +78,7 @@ public class S3 {
 	}
 
 	@Test
-	public void ListBucket() {
+	public void t011ListBucket() {
         /*
          * List the buckets in your account
          */
@@ -113,25 +95,21 @@ public class S3 {
 	}
 
 	@Test
-	public void UploadFile() {
-		try {
-		    /*
-		     * Upload an object to your bucket - You can easily upload a file to
-		     * S3, or upload directly an InputStream if you know the length of
-		     * the data in the stream. You can also specify your own metadata
-		     * when uploading to S3, which allows you set a variety of options
-		     * like content-type and content-encoding, plus additional metadata
-		     * specific to your applications.
-		     */
-		    System.out.println("Uploading a new object to S3 from a file\n");
-		    s3.putObject(new PutObjectRequest(bucketName, key, createSampleFile()));
-		} catch(Exception e) {
-			fail(e.getMessage());
-		}
+	public void t012UploadFile() throws Exception {
+	    /*
+	     * Upload an object to your bucket - You can easily upload a file to
+	     * S3, or upload directly an InputStream if you know the length of
+	     * the data in the stream. You can also specify your own metadata
+	     * when uploading to S3, which allows you set a variety of options
+	     * like content-type and content-encoding, plus additional metadata
+	     * specific to your applications.
+	     */
+	    System.out.println("Uploading a new object to S3 from a file\n");
+	    s3.putObject(new PutObjectRequest(bucketName, key, createSampleFile()));
 	}
 	
 	@Test
-	public void ListFile() {
+	public void t013ListFile() {
         /*
          * List objects in your bucket by prefix - There are many options for
          * listing the objects in your bucket.  Keep in mind that buckets with
@@ -149,31 +127,27 @@ public class S3 {
 	}
 	
 	@Test
-	public void DownloadFile() {
-		try {
-	        /*
-	         * Download an object - When you download an object, you get all of
-	         * the object's metadata and a stream from which to read the contents.
-	         * It's important to read the contents of the stream as quickly as
-	         * possibly since the data is streamed directly from Amazon S3 and your
-	         * network connection will remain open until you read all the data or
-	         * close the input stream.
-	         *
-	         * GetObjectRequest also supports several other options, including
-	         * conditional downloading of objects based on modification times,
-	         * ETags, and selectively downloading a range of an object.
-	         */
-	        System.out.println("Downloading an object");
-	        S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
-	        System.out.println("Content-Type: "  + object.getObjectMetadata().getContentType());
-	        displayTextInputStream(object.getObjectContent());
-		} catch(Exception e) {
-			fail(e.getMessage());
-		}
+	public void t014DownloadFile() throws Exception {
+        /*
+         * Download an object - When you download an object, you get all of
+         * the object's metadata and a stream from which to read the contents.
+         * It's important to read the contents of the stream as quickly as
+         * possibly since the data is streamed directly from Amazon S3 and your
+         * network connection will remain open until you read all the data or
+         * close the input stream.
+         *
+         * GetObjectRequest also supports several other options, including
+         * conditional downloading of objects based on modification times,
+         * ETags, and selectively downloading a range of an object.
+         */
+        System.out.println("Downloading an object");
+        S3Object object = s3.getObject(new GetObjectRequest(bucketName, key));
+        System.out.println("Content-Type: "  + object.getObjectMetadata().getContentType());
+        displayTextInputStream(object.getObjectContent());
 	}
 	
 	@Test
-	public void DeleteFile() {
+	public void t015DeleteFile() {
         /*
          * Delete an object - Unless versioning has been turned on for your bucket,
          * there is no way to undelete an object, so use caution when deleting objects.
@@ -183,18 +157,14 @@ public class S3 {
     }
 	
 	@Test
-	public void DeleteBucket() {
-		try{
-	        /*
-	         * Delete a bucket - A bucket must be completely empty before it can be
-	         * deleted, so remember to delete any objects from your buckets before
-	         * you try to delete them.
-	         */
-	        System.out.println("Deleting bucket " + bucketName + "\n");
-	        s3.deleteBucket(bucketName);
-		} catch(Exception e) {
-			fail(e.getMessage());
-		}
+	public void t016DeleteBucket() {
+        /*
+         * Delete a bucket - A bucket must be completely empty before it can be
+         * deleted, so remember to delete any objects from your buckets before
+         * you try to delete them.
+         */
+        System.out.println("Deleting bucket " + bucketName + "\n");
+        s3.deleteBucket(bucketName);
 	}
 
 
