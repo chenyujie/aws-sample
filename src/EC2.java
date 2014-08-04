@@ -66,7 +66,7 @@ public class EC2 {
 		java.util.List<com.amazonaws.services.ec2.model.Region> regions = ec2.describeRegions().getRegions();
 		System.out.printf(">> No of regions %d%n", regions.size());
 		for (com.amazonaws.services.ec2.model.Region region : regions) {
-			System.out.println(">>>>  " + region.getRegionName());
+			System.out.printf(">>>>  %s:%s\n", region.getRegionName(), region.getEndpoint());
 		}
 		System.out.println();
 	}
@@ -96,7 +96,7 @@ public class EC2 {
 	}
 
 	@Test
-	public void t013ListInstances() {
+	public void t024ListInstances() {
 		List<Reservation> groups = ec2.describeInstances().getReservations();
 		System.out.printf(">> No of instances %d\n", groups.size());
 		for (Reservation group : groups) {
@@ -178,7 +178,8 @@ public class EC2 {
 
 	@Test
 	public void t022createKeyPair() {
-		ec2.createKeyPair(new CreateKeyPairRequest(keyn)).getKeyPair();
+		String rsa = ec2.createKeyPair(new CreateKeyPairRequest(keyn)).getKeyPair().getKeyMaterial();
+		System.out.println(String.format("Key Pair created: (%s)\n", rsa));
 	}
 
 	@Test
