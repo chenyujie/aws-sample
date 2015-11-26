@@ -114,6 +114,7 @@ public class HybridUtil {
 	public static void saveCredentials(String credentials) throws IOException {
         String home = System.getProperty("user.home");
         File dir = new File(home, ".aws");
+        dir.mkdir();
         File file = new File(dir, "credentials");
         FileWriter writer = new FileWriter(file, false); // append=false
         writer.write(credentials);
