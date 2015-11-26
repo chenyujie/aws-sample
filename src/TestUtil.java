@@ -91,7 +91,7 @@ public class TestUtil {
 	@Test
 	public void t000credential() {
 		try {
-			HybridUtil.saveCredentials("[default]\naws_access_key_id=AKIAJTDWDULWGLXPL3VQ\naws_secret_access_key=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");
+			HybridUtil.saveCredentials("[default]\naws_access_key_id=xxxx\naws_secret_access_key=yyyy");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
