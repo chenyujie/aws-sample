@@ -30,7 +30,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class TestUtil {
 	protected Regions region = Regions.AP_SOUTHEAST_1;
-
+	
 	@Test
 	public void t000listaz() {
 		List<AvailabilityZone> azs = HybridUtil.getConnection(region).describeAvailabilityZones().getAvailabilityZones();
@@ -117,8 +117,8 @@ public class TestUtil {
 		AmazonEC2 ec2 = HybridUtil.getConnection(region);
 		List<ConversionTask> tasks = ec2.describeConversionTasks().getConversionTasks();
 		for (ConversionTask task : tasks) {
-			System.out.printf(">>>> %s: %s\n", task.getConversionTaskId(), task);
 			if (task.getState().equals("active")) {
+				System.out.printf(">>>> Cancelling %s: %s\n", task.getConversionTaskId(), task);
 				ec2.cancelConversionTask(new CancelConversionTaskRequest().withConversionTaskId(task.getConversionTaskId()).withReasonMessage("just cancel"));
 			}
 		}
@@ -140,25 +140,31 @@ public class TestUtil {
 	public void t009import() throws Exception {
 		AmazonEC2 ec2 = HybridUtil.getConnection(region);
 		AmazonS3Client s3 = HybridUtil.getStorage(region);
-		System.out.println(HybridUtil.migrate(ec2, "ap-southeast-1a", s3, "chenyujie", "mini-disk1.vmdk", 2));
+		String bucket = "hybridaas";
+		String key = "cascading-template-08-disk1.vmdk";
+		System.out.printf(">>>> Importing %s/%s\n", bucket, key);
+		System.out.println(HybridUtil.migrate(ec2, "ap-southeast-1b", s3, bucket, key, 200));
 	}
 
 	@Test
 	public void t010import() throws Exception {
 		AmazonEC2 ec2 = HybridUtil.getConnection(region);
 		AmazonS3Client s3 = HybridUtil.getStorage(region);
-		System.out.printf(">> task id: %s\n", HybridUtil.migrate(ec2, "subnet-944587f1", null, "Linux", InstanceType.T2Micro, ArchitectureValues.X86_64, s3, "chenyujie", "CentOS6-32-disk1.vmdk", 8));
+		String bucket = "chenyujie-singapore";
+		String key = "template-vpn-chenyujie-disk1.vmdk";
+		System.out.printf(">>>> Importing %s/%s", bucket, key);
+		System.out.printf(">> task id: %s\n", HybridUtil.migrate(ec2, "subnet-944587f1", null, "Linux", InstanceType.T2Micro, ArchitectureValues.X86_64, s3, bucket, key, 8));
 	}
 
 	@Test
 	public void t011upload() throws Exception {
 		AmazonS3Client s3 = HybridUtil.getStorage(region);
-		String bucket = "chenyujie"; // "s3-upload-sdk-sample-" + HybridUtil.getCredentials().getAWSAccessKeyId().toLowerCase();
+		String bucket = "hybridbucket"; // "s3-upload-sdk-sample-" + HybridUtil.getCredentials().getAWSAccessKeyId().toLowerCase();
 		if (!s3.doesBucketExist(bucket)) {
 			s3.createBucket(bucket);
 		}
-		File file = new File("d:/linux/u64/u64-disk1.vmdk");
-		HybridUtil.upload(s3, bucket, file.getName(), file, 10 * 1024);
+		File file = new File("E:/clean/kubernetes-disk1.vmdk");
+		HybridUtil.upload(s3, bucket, file.getName(), file,  10 * 1024 * 1024);
 	}
 
 	@Test
